@@ -1,0 +1,22 @@
+{
+  "name": "backend-with-hapi",
+  "version": "1.0.0",
+  "description": "ini adalah implementasi PBO menggunakan hapi",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node .",
+    "start-dev": "nodemon ."
+  },
+  "author": "Roynaldi",
+  "license": "ISC",
+  "dependencies": {
+    "@hapi/hapi": "^21.3.6",
+    "nanoid": "^5.0.6"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1"
+  }
+}

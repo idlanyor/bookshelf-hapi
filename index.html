@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Hill Cipher Encryption/Decryption</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    textarea {
+      width: 300px;
+      height: 100px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Hill Cipher Encryption/Decryption</h1>
+  <textarea
+    id="inputText"
+    placeholder="Enter your text here..."
+  ></textarea>
+  <br>
+  <label for="keyInput">Enter the key (3x3 matrix, separated by commas):</label>
+  <input
+    type="text"
+    id="keyInput"
+    placeholder="e.g. 17,17,5,21,18,21,2,2,19"
+  >
+  <br>
+  <button onclick="encrypt()">Encrypt</button>
+  <button onclick="decrypt()">Decrypt</button>
+  <br>
+  <textarea
+    id="outputText"
+    placeholder="Encrypted/Decrypted text will appear here..."
+    readonly
+  ></textarea>
+
+  <script>
+    // Hill Cipher encryption and decryption functions
+    function hillCipher(text, key, encrypt) {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const n = key.length;
+      const textBlocks = [];
+      let ciphertext = '';
+
+      // Convert text to uppercase and remove non-alphabetic characters
+      text = text.toUpperCase().replace(/[^A-Z]/g, '');
+
+      // Pad the text with 'X' if its length is not a multiple of the key size
+      if (text.length % n !== 0) {
+        text += 'X'.repeat(n - (text.length % n));
+      }
+
+      // Split the text into blocks of size n
+      for (let i = 0; i < text.length; i += n) {
+        textBlocks.push(text.slice(i, i + n));
+      }
+
+      // Perform encryption or decryption
+      for (let block of textBlocks) {
+        const blockVector = [];
+        for (let i = 0; i < n; i++) {
+          blockVector.push(alphabet.indexOf(block[i]));
+        }
+
+        const productVector = encrypt
+          ? multiplyMatrix(key, blockVector)
+          : multiplyMatrix(invert(key), blockVector);
+
+        for (let i = 0; i < n; i++) {
+          ciphertext += alphabet[productVector[i] % 26];
+        }
+      }
+
+      return ciphertext;
+    }
+
+    function encrypt() {
+      const inputText = document.getElementById('inputText').value;
+      const keyInput = document.getElementById('keyInput').value;
+      const key = parseKey(keyInput);
+      if (!key) {
+        alert('Invalid key format');
+        return;
+      }
+      const encryptedText = hillCipher(inputText, key, true);
+      document.getElementById('outputText').value = encryptedText;
+    }
+
+    function decrypt() {
+      const inputText = document.getElementById('inputText').value;
+      const keyInput = document.getElementById('keyInput').value;
+      const key = parseKey(keyInput);
+      if (!key) {
+        alert('Invalid key format');
+        return;
+      }
+      const decryptedText = hillCipher(inputText, key, false);
+      document.getElementById('outputText').value = decryptedText;
+    }
+
+    function parseKey(keyInput) {
+      const keyValues = keyInput.split(',').map(Number);
+      if (keyValues.length !== 9 || keyValues.some(isNaN)) {
+        return null;
+      }
+      const key = [];
+      for (let i = 0; i < 9; i += 3) {
+        key.push([keyValues[i], keyValues[i + 1], keyValues[i + 2]]);
+      }
+      return key;
+    }
+
+    // Helper functions for matrix operations
+    function multiplyMatrix(matrix, vector) {
+      const result = [];
+      for (let i = 0; i < matrix.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < vector.length; j++) {
+          sum += matrix[i][j] * vector[j];
+        }
+        result.push(sum % 26);
+      }
+      return result;
+    }
+
+    function invert(matrix) {
+      const n = matrix.length;
+      const inverse = [];
+      const det = determinant(matrix);
+      const modInverse = modInverse(det, 26);
+
+      for (let i = 0; i < n; i++) {
+        inverse[i] = [];
+        for (let j = 0; j < n; j++) {
+          const minor = getMinor(matrix, i, j);
+          const sign = ((i + j) % 2 === 0) ? 1 : -1;
+          inverse[i][j] = (sign * determinant(minor) * modInverse) % 26;
+        }
+      }
+
+      return transpose(inverse);
+    }
+
+    function determinant(matrix) {
+      const n = matrix.length;
+      if (n === 1) {
+        return matrix[0][0];
+      }
+
+      let det = 0;
+      for (let i = 0; i < n; i++) {
+        const minor = getMinor(matrix, 0, i);
+        const sign = (i % 2 === 0) ? 1 : -1;
+        det += sign * matrix[0][i] * determinant(minor);
+      }
+
+      return det % 26;
+    }
+
+    function getMinor(matrix, row, col) {
+      const minor = [];
+      for (let i = 0; i < matrix.length; i++) {
+        if (i !== row) {
+          minor[i - (i > row ? 1 : 0)] = [];
+          for (let j = 0; j < matrix[i].length; j++) {
+            if (j !== col) {
+              minor[i - (i > row ? 1 : 0)][j - (j > col ? 1 : 0)] = matrix[i][j];
+            }
+          }
+        }
+      }
+      return minor;
+    }
+
+    function modInverse(value, mod) {
+      for (let x = 1; x < mod; x++) {
+        if ((value * x) % mod === 1) {
+          return x;
+        }
+      }
+    }
+
+    function transpose(matrix) {
+      const result = [];
+      for (let i = 0; i < matrix[0].length; i++) {
+        result[i] = [];
+        for (let j = 0; j < matrix.length; j++) {
+          result[i][j] = matrix[j][i];
+        }
+      }
+      return result;
+    }
+  </script>
+</body>
+
+</html>
